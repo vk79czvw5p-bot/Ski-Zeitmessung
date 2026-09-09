@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Ski-Zeitmessung">
+<title>🏁 Ski-Zeitmessung</title>
+<style>
+*{box-sizing:border-box} body{margin:0;background:#eef2f5;color:#17212b;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{background:#123b5d;color:#fff;padding:20px 16px calc(18px + env(safe-area-inset-top));text-align:center}
+h1{margin:0;font-size:24px} main{max-width:650px;margin:auto;padding:14px}
+.card{background:#fff;border-radius:18px;padding:18px;margin-bottom:14px;box-shadow:0 3px 14px #0001}
+.label{font-size:12px;color:#66727e;text-transform:uppercase;letter-spacing:.08em}
+.nr{font-size:28px;font-weight:800;text-align:center;margin:8px 0 16px}
+input{width:100%;font-size:22px;text-align:center;padding:12px;border:1px solid #cbd4db;border-radius:12px}
+.big{font-size:58px;font-weight:900;text-align:center;font-variant-numeric:tabular-nums;margin:8px 0 18px}
+button{border:0;border-radius:14px;padding:17px 12px;font-size:19px;font-weight:800;color:#fff;background:#123b5d}
+button:disabled{opacity:.35} .start{background:#1f7a45}.finish{background:#a52d2d}.secondary{background:#64727d}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.wide{width:100%;margin-top:10px}
+.row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #edf0f2;font-variant-numeric:tabular-nums}
+.row:last-child{border-bottom:0}.state{text-align:center;font-weight:800;padding:8px}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:9px 5px;text-align:left;border-bottom:1px solid #edf0f2}th{font-size:11px;color:#66727e}
+.note{font-size:13px;color:#66727e;line-height:1.45}
+</style>
+</head>
+<body>
+<header><h1>🏁 Ski-Zeitmessung</h1></header>
+<main>
+<section class="card">
+<div class="label">Startnummer</div>
+<input id="nr" type="number" min="1" max="999" value="1" inputmode="numeric">
+<div class="label" style="margin-top:18px">Laufzeit</div>
+<div id="time" class="big">00:00.00</div>
+<div id="state" class="state">BEREIT</div>
+<div class="row"><span>Start</span><strong id="start">--:--:--.--</strong></div>
+<div class="row"><span>Ziel</span><strong id="finish">--:--:--.--</strong></div>
+</section>
+
+<section class="card">
+<div class="actions">
+<button id="startBtn" class="start" onclick="startRun()">▶ START</button>
+<button id="finishBtn" class="finish" onclick="finishRun()" disabled>■ ZIEL</button>
+</div>
+<button class="secondary wide" onclick="newRun()">Neuer Lauf</button>
+</section>
+
+<section class="card">
+<div class="label">Letzte Ergebnisse</div>
+<div style="overflow:auto">
+<table><thead><tr><th>Nr.</th><th>Start</th><th>Ziel</th><th>Zeit</th></tr></thead>
+<tbody id="results"></tbody></table>
+</div>
+<button class="wide" onclick="exportCSV()">CSV für Excel exportieren</button>
+<button class="secondary wide" onclick="clearResults()">Ergebnisse löschen</button>
+</section>
+
+<section class="card">
+<div class="label">iPhone-Hinweis</div>
+<p class="note">Diese Version ist ein Test der Bedienung. Später kommen START automatisch vom Startgerät und ZIEL automatisch von der Lichtschranke. Die Ergebnisse bleiben dann auf dem Zielgerät gespeichert.</p>
+</section>
+</main>
+<script>
+let results=JSON.parse(localStorage.getItem("ski_results")||"[]");
+let current={nr:1,start:null,finish:null}; let timer=null;
+
+function timeString(d){return d.toLocaleTimeString("de-DE",{hour12:false})+"."+String(d.getMilliseconds()).padStart(3,"0").slice(0,2)}
+function duration(ms){let cs=Math.floor(ms/10),s=Math.floor(cs/100),m=Math.floor(s/60);cs%=100;s%=60;return String(m).padStart(2,"0")+":"+String(s).padStart(2,"0")+"."+String(cs).padStart(2,"0")}
+function render(){
+ document.getElementById("start").textContent=current.start?timeString(current.start):"--:--:--.--";
+ document.getElementById("finish").textContent=current.finish?timeString(current.finish):"--:--:--.--";
+ document.getElementById("time").textContent=current.start?(current.finish?duration(current.finish-current.start):duration(Date.now()-current.start.getTime())):"00:00.00";
+ document.getElementById("startBtn").disabled=!!current.start;
+ document.getElementById("finishBtn").disabled=!current.start||!!current.finish;
+ document.getElementById("state").textContent=current.finish?"ZIEL ERFASST":current.start?"LÄUFT …":"BEREIT";
+ document.getElementById("results").innerHTML=results.slice().reverse().map(x=>`<tr><td>${x.nr}</td><td>${x.start}</td><td>${x.finish}</td><td><strong>${x.time}</strong></td></tr>`).join("");
+}
+function startRun(){
+ current.nr=Number(document.getElementById("nr").value)||1; current.start=new Date(); current.finish=null;
+ clearInterval(timer); timer=setInterval(render,50); render();
+}
+function finishRun(){
+ if(!current.start)return; current.finish=new Date(); clearInterval(timer);
+ results.push({nr:current.nr,start:timeString(current.start),finish:timeString(current.finish),time:duration(current.finish-current.start)});
+ localStorage.setItem("ski_results",JSON.stringify(results)); render();
+}
+function newRun(){
+ clearInterval(timer); current={nr:(Number(document.getElementById("nr").value)||current.nr||1)+1,start:null,finish:null};
+ document.getElementById("nr").value=current.nr; render();
+}
+function clearResults(){if(confirm("Alle gespeicherten Ergebnisse löschen?")){results=[];localStorage.removeItem("ski_results");render()}}
+function exportCSV(){
+ let rows=[["Start-Nr.","Startzeit","Zielzeit","Laufzeit"],...results.map(x=>[x.nr,x.start,x.finish,x.time])];
+ let csv="\ufeff"+rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(";")).join("\r\n");
+ let a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download="Ski_Ergebnisse.csv";a.click();
+}
+render();
+</script>
+</body>
+</html>
