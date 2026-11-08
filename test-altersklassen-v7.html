@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#10243a"><title>Ski-Zeitmessung</title>
+<style>
+:root{--navy:#10243a;--blue:#1769aa;--green:#16834a;--red:#c7473b;--bg:#f2f5f8;--line:#dce3ea;--muted:#647487}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font:16px system-ui,-apple-system,Segoe UI,sans-serif;color:#15283b}header{background:var(--navy);color:white;padding:18px 16px 14px;position:sticky;top:0;z-index:3}header .top{display:flex;justify-content:space-between;align-items:center;gap:10px}h1{font-size:20px;margin:0;font-weight:800;letter-spacing:.3px}.status{font-size:12px;border:1px solid #52708b;border-radius:20px;padding:6px 10px;color:#c9f3d8}.wrap{max-width:900px;margin:auto;padding:14px 14px 90px}.tabs{display:flex;gap:8px;margin:14px 0;overflow:auto}.tab{border:1px solid var(--line);background:white;border-radius:12px;padding:10px 14px;font-weight:700;white-space:nowrap;color:#34495e}.tab.active{background:var(--blue);color:white;border-color:var(--blue)}.panel{display:none}.panel.active{display:block}.card{background:white;border:1px solid var(--line);border-radius:16px;padding:15px;margin-bottom:13px;box-shadow:0 2px 8px #142b4010}.muted{color:var(--muted);font-size:13px}.row{display:flex;gap:10px;align-items:center}.between{justify-content:space-between}.field{width:100%;padding:12px;border:1px solid #cbd5df;border-radius:10px;font:inherit;background:white}.btn{border:0;border-radius:12px;padding:14px 16px;color:white;font-weight:800;font-size:16px;background:var(--blue);width:100%}.btn.green{background:var(--green)}.btn.red{background:var(--red)}.btn.gray{background:#e8edf2;color:#26394c}.btn.small{width:auto;padding:9px 12px;font-size:13px}.metric{font-size:28px;font-weight:850}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:11px 8px;border-bottom:1px solid #e8edf2;white-space:nowrap}th{color:var(--muted);font-size:12px;text-transform:uppercase}.rank{font-weight:900;color:var(--blue)}.pill{font-size:11px;padding:4px 8px;border-radius:20px;background:#eaf1f8;color:#31516e}.empty{text-align:center;color:var(--muted);padding:22px}.runner{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid #edf0f3}.runner:last-child{border:0}.runner strong{font-size:18px}.notice{background:#fff7e7;border:1px solid #f1d59b;padding:12px;border-radius:12px;font-size:13px;line-height:1.45}
+</style></head><body>
+<header><div class="top"><h1>🏁 SKI-ZEITMESSUNG</h1><span class="status" id="sysStatus">● Testbetrieb</span></div><div class="muted" style="color:#b8c7d5;margin-top:5px">Immer nur ein Fahrer auf der Strecke · bis 100 Teilnehmer</div></header>
+<div class="wrap">
+<nav class="tabs">
+<button class="tab active" data-tab="training">Training</button><button class="tab" data-tab="automatik">Automatik-Test</button><button class="tab" data-tab="rennen">Rennen</button><button class="tab" data-tab="rennergebnisse">Rennergebnisse</button><button class="tab" data-tab="rangliste">Trainingsrangliste</button><button class="tab" data-tab="historie">Trainingshistorie</button><button class="tab" data-tab="teilnehmer">Teilnehmer</button>
+</nav>
+<section class="panel active" id="training">
+<div class="card"><div class="row between"><div><div class="muted">FESTE TRAININGSNUMMER</div><div class="metric" id="trainingBib">–</div></div><span class="pill" id="trainingState">Bereit</span></div>
+<select class="field" id="trainingDriver" style="margin-top:12px"><option value="">Trainingsfahrer auswählen</option></select>
+<div class="grid" style="margin-top:10px"><button class="btn green" id="trainingStart">▶ START TRAINING</button><button class="btn red" id="trainingFinish">🏁 ZIEL TRAINING</button></div><button class="btn gray" id="trainingDnf" style="margin-top:10px">Nicht im Ziel (Training)</button>
+<p class="muted">Hier werden ausschließlich Trainingszeiten gespeichert. Die feste Nummer kommt aus der Teilnehmerliste.</p></div>
+<div class="card"><strong>Aktueller Trainingslauf</strong><div id="trainingActive" class="empty">Noch kein Fahrer gestartet.</div></div>
+<div class="card"><strong>Letzte Trainingszeiten</strong><div id="trainingRecent" class="empty">Noch keine Trainingszeiten.</div></div>
+</section>
+
+<section class="panel" id="automatik">
+<div class="card">
+  <div class="row between"><strong>Automatischer Zeitmessablauf</strong><span class="pill" id="autoState">Bereit</span></div>
+  <p class="muted">Dieser Bereich simuliert die späteren Signale der ESP32-Funkmodule. Die beiden Signal-Schaltflächen sind nur zum Testen am PC oder Handy gedacht – später kommen Start und Ziel direkt von der Hardware.</p>
+  <label class="muted" for="autoDriver">Nächsten Trainingsfahrer auswählen</label>
+  <select class="field" id="autoDriver" style="margin-top:6px"><option value="">Trainingsfahrer auswählen</option></select>
+  <div class="card" style="margin:12px 0 0;background:#f7f9fb">
+    <div class="muted">ZUGEORDNETER FAHRER</div>
+    <div class="metric" id="autoRunner">–</div>
+    <div class="muted" id="autoRunId">Noch kein Lauf gestartet</div>
+  </div>
+  <div class="grid" style="margin-top:12px">
+    <button class="btn green" id="autoStartSignal">Startsignal simulieren</button>
+    <button class="btn red" id="autoFinishSignal" disabled>Zielsignal simulieren</button>
+  </div>
+  <div class="notice" style="margin-top:12px" id="autoNotice">Bereit. Fahrer auswählen und anschließend das Startsignal simulieren.</div>
+</div>
+<div class="card"><strong>Letzte Automatik-Ereignisse</strong><div id="autoLog" class="empty">Noch keine Ereignisse.</div></div>
+</section>
+<section class="panel" id="rennen">
+<div class="card">
+<strong>Neues Rennen / Wettkampf</strong>
+<input class="field" id="raceName" placeholder="Rennname, z. B. Vereinsrennen 1" style="margin-top:10px">
+<p class="muted">Wähle zuerst aus, wer bei diesem Rennen tatsächlich dabei ist. Nur ausgewählte Teilnehmer kommen in die Startliste. Die Trainingsnummer bleibt unverändert.</p>
+<div id="raceRoster" style="margin-top:10px"></div>
+<div class="grid" style="margin-top:10px">
+<button class="btn" id="raceRandomize">Startnummern zufällig je Altersklasse</button>
+<button class="btn" id="racePrepare">Startliste übernehmen</button>
+<button class="btn gray" id="raceReset">Rennen zurücksetzen</button>
+</div>
+</div>
+<div class="card">
+<div class="row between"><strong>Rennablauf</strong><span class="pill" id="raceQueueState">Startliste nicht übernommen</span></div>
+<div class="metric" id="raceNextBib">–</div>
+<div id="raceNextName" style="font-weight:700">Noch keine Startliste vorbereitet</div>
+<div class="muted" id="raceQueueInfo"></div>
+<div class="grid" style="margin-top:12px">
+<button class="btn green" id="raceStart">▶ START RENNEN</button>
+<button class="btn red" id="raceFinish">🏁 ZIEL RENNEN</button>
+</div>
+<div class="grid" style="margin-top:10px"><button class="btn gray" id="raceSkip">Nicht am Start</button><button class="btn red" id="raceDnf">Nicht im Ziel</button></div>
+<p class="muted">Nach jedem Zieleinlauf springt die Anzeige automatisch zur nächsten vergebenen Rennstartnummer. Übersprungene Fahrer erhalten kein Ergebnis.</p>
+</div>
+<div class="card"><strong>Aktueller Rennlauf</strong><div id="raceActive" class="empty">Noch kein Rennfahrer gestartet.</div></div>
+<div class="card"><strong>Rennprotokoll</strong><div id="raceLog" class="empty">Noch keine Ereignisse.</div></div>
+</section>
+<section class="panel" id="rennergebnisse"><div class="card"><div class="row between"><strong>🏁 Gespeicherte Rennergebnisse</strong><button class="btn small gray" id="raceExport">CSV exportieren</button></div><div id="raceResultsList" class="empty">Noch keine Rennergebnisse gespeichert.</div></div></section>
+<section class="panel" id="rangliste"><div class="card"><div class="row between"><strong>🏆 Trainingsrangliste</strong><button class="btn small gray" id="trainingExport">CSV exportieren</button></div><div id="rankingList" class="empty">Noch keine Trainingsergebnisse.</div></div></section>
+<section class="panel" id="historie"><div class="card"><strong>Trainingshistorie eines Fahrers</strong><select class="field" id="historyDriver" style="margin-top:10px"><option value="">Bitte Fahrer auswählen</option></select><div id="historyList" class="empty">Fahrer auswählen, um alle Trainingsläufe zu sehen.</div></div></section>
+<section class="panel" id="teilnehmer"><div class="card"><strong>Teilnehmer hinzufügen</strong>
+<label class="muted" for="newType" style="display:block;margin-top:10px">Teilnehmertyp</label><select class="field" id="newType"><option value="training">Trainingsteilnehmer (mit fester Trainingsnummer)</option><option value="race">Nur Rennteilnehmer (ohne Trainingsnummer)</option></select>
+<div class="grid" style="margin-top:10px"><input class="field" id="newBib" type="number" placeholder="Feste Trainingsnr."><input class="field" id="newName" placeholder="Name"></div>
+<input class="field" id="newBirth" type="date" aria-label="Geburtsdatum" placeholder="Geburtsdatum" style="margin-top:10px"><button class="btn" style="margin-top:10px" id="addParticipant">+ Teilnehmer speichern</button><p class="muted">Trainingsteilnehmer erhalten eine feste Nummer und erscheinen automatisch in der Rennteilnehmerliste. Rennteilnehmer können ausschließlich bei Rennen starten und benötigen keine Trainingsnummer. Ihre Rennstartnummer wird je Rennen vergeben.</p></div>
+<div class="card"><div class="row between"><strong>Altersklassen festlegen</strong><span class="pill">Bearbeiten & Reihenfolge</span></div><p class="muted">Lege fest, welche Geburtsjahrgänge zu welcher Altersklasse gehören. Über „Altersklassen ändern“ kannst du bestehende Klassen bearbeiten. Die Bereiche dürfen sich nicht überschneiden.</p><div class="grid" style="margin-top:10px"><input class="field" id="className" placeholder="Bezeichnung, z. B. U12"><input class="field" id="classFrom" type="number" min="1900" max="2100" placeholder="Jahrgang von"></div><input class="field" id="classTo" type="number" min="1900" max="2100" placeholder="Jahrgang bis (einschließlich)" style="margin-top:8px"><button class="btn" id="addAgeClass" style="margin-top:8px">+ Altersklasse hinzufügen</button><div id="ageClassRules" style="margin-top:10px"></div><button class="btn green" id="assignAgeClasses" style="margin-top:10px">Altersklassen automatisch zuordnen</button></div>
+<div class="card"><div class="row between"><strong>Teilnehmerliste</strong><span class="pill" id="participantCount">0 / 100</span></div><p class="muted">Geburtsdatum kann direkt in der Liste ergänzt oder geändert werden.</p><div id="participantList" class="empty">Noch keine Teilnehmer eingetragen.</div></div></section>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let participants=JSON.parse(localStorage.getItem('skiParticipants')||'[]');
+// Bestehende Teilnehmer behalten ihre bisherigen festen Trainingsnummern.
+participants.forEach(p=>{if(!p.role)p.role='training';if(p.role==='training'&&p.trainingBib==null)p.trainingBib=p.bib;});
+let trainingResults=JSON.parse(localStorage.getItem('skiResults')||'[]');
+let trainingDnf=JSON.parse(localStorage.getItem('skiTrainingDnf')||'[]');
+let raceResults=JSON.parse(localStorage.getItem('skiRaceResults')||'[]');
+let activeTraining=null,activeRace=null;
+let raceRoster=JSON.parse(localStorage.getItem('skiRaceRoster')||'[]');
+let ageClassRules=JSON.parse(localStorage.getItem('skiAgeClassRules')||'[]');
+let raceQueue=[];let raceQueueIndex=0;let raceLog=[];let racePrepared=false;
+function save(){localStorage.setItem('skiParticipants',JSON.stringify(participants));localStorage.setItem('skiResults',JSON.stringify(trainingResults));localStorage.setItem('skiTrainingDnf',JSON.stringify(trainingDnf));localStorage.setItem('skiRaceResults',JSON.stringify(raceResults));localStorage.setItem('skiRaceRoster',JSON.stringify(raceRoster));localStorage.setItem('skiAgeClassRules',JSON.stringify(ageClassRules))}
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function fmt(ms){let m=Math.floor(ms/60000),s=Math.floor(ms%60000/1000),h=Math.floor(ms%1000/10);return `${m}:${String(s).padStart(2,'0')}.${String(h).padStart(2,'0')}`}
+function clock(ts){return new Date(ts).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}
+function date(ts){return new Date(ts).toLocaleDateString('de-DE')}
+function person(bib){return participants.find(p=>p.bib===+bib)}
+function nameOf(bib){return person(bib)?.name||'Unbekannt'}
+function trainingNumber(p){return p&&p.role!=='race'?(p.trainingBib??p.bib):null}
+function fillDriverSelect(id,placeholder){let s=$(id),old=s.value;s.innerHTML=`<option value="">${placeholder}</option>`+participants.filter(p=>p.role!=='race').slice().sort((a,b)=>trainingNumber(a)-trainingNumber(b)).map(p=>`<option value="${p.bib}">#${trainingNumber(p)} – ${esc(p.name)}</option>`).join('');if([...s.options].some(o=>o.value===old))s.value=old}
+
+// Gemeinsame Schnittstelle für spätere ESP32-Ereignisse.
+// event: {type:"START"|"FINISH", runId:"...", timestampMs: number}
+let autoActive = null;
+let autoLog = [];
+let autoSequence = 0;
+
+function autoLogEvent(message) {
+  autoLog.unshift({time:Date.now(), message});
+  autoLog = autoLog.slice(0,8);
+  $('autoLog').innerHTML = autoLog.map(e =>
+    `<div class="runner"><span>${esc(e.message)}</span><span class="muted">${clock(e.time)}</span></div>`
+  ).join('');
+}
+
+// Diese Funktion wird später vom Empfangsmodul aufgerufen.
+// Die Zeitstempel kommen im Echtbetrieb von den synchronisierten ESP32-Uhren.
+function handleTimingEvent(event) {
+  if (!event || !event.type || !event.runId || !Number.isFinite(event.timestampMs)) return;
+  if (event.type === 'START') {
+    if (autoActive) return; // keinen zweiten Lauf parallel annehmen
+    const bib = +$('autoDriver').value;
+    if (!bib) {
+      $('autoNotice').textContent = 'Kein Fahrer ausgewählt – Startsignal wurde verworfen.';
+      return;
+    }
+    autoActive = {
+      runId: event.runId,
+      bib,
+      name: nameOf(bib),
+      start: event.timestampMs
+    };
+    $('autoDriver').disabled = true;
+    $('autoStartSignal').disabled = true;
+    $('autoFinishSignal').disabled = false;
+    $('autoState').textContent = 'Fahrer unterwegs';
+    $('autoRunner').textContent = `#${bib} – ${nameOf(bib)}`;
+    $('autoRunId').textContent = `Laufkennung: ${event.runId}`;
+    $('autoNotice').textContent = 'Start erkannt. Der Fahrer ist unterwegs; die Fahrerauswahl ist für diesen Lauf gesperrt.';
+    autoLogEvent(`START erkannt – #${bib} ${nameOf(bib)}`);
+    return;
+  }
+  if (event.type === 'FINISH') {
+    if (!autoActive || event.runId !== autoActive.runId) {
+      autoLogEvent('ZIEL ignoriert – keine passende aktive Laufkennung');
+      return;
+    }
+    const ms = event.timestampMs - autoActive.start;
+    if (ms <= 0) {
+      autoLogEvent('Fehler: Zielzeit liegt vor der Startzeit');
+      return;
+    }
+    const result = {...autoActive, finish:event.timestampMs, ms, source:'automatic-test'};
+    trainingResults.unshift(result);
+    autoLogEvent(`ZIEL erkannt – #${result.bib}: ${fmt(ms)} gespeichert`);
+    autoActive = null;
+    save();
+    $('autoDriver').disabled = false;
+    $('autoStartSignal').disabled = false;
+    $('autoFinishSignal').disabled = true;
+    $('autoState').textContent = 'Bereit';
+    $('autoRunner').textContent = '–';
+    $('autoRunId').textContent = 'Lauf abgeschlossen';
+    $('autoNotice').textContent = `Zeit ${fmt(ms)} wurde automatisch gespeichert. Jetzt kann der nächste Fahrer ausgewählt werden.`;
+    render();
+  }
+}
+
+function simulateAutoEvent(type) {
+  const now = Date.now();
+  const runId = autoActive?.runId || `TEST-${Date.now()}-${++autoSequence}`;
+  handleTimingEvent({type, runId, timestampMs:now});
+}
+
+function render(){
+ fillDriverSelect('trainingDriver','Trainingsfahrer auswählen');fillDriverSelect('autoDriver','Trainingsfahrer auswählen');fillDriverSelect('historyDriver','Bitte Fahrer auswählen');
+ $('trainingBib').textContent=$('trainingDriver').value?'#'+$('trainingDriver').value:'–';
+ $('trainingState').textContent=activeTraining?'Fahrer unterwegs':'Bereit';
+ $('trainingActive').innerHTML=activeTraining?`<div class="runner"><div><strong>#${activeTraining.bib} – ${esc(nameOf(activeTraining.bib))}</strong><div class="muted">Gestartet ${clock(activeTraining.start)}</div></div><span class="pill">LÄUFT</span></div>`:'<div class="empty">Noch kein Fahrer gestartet.</div>';
+ $('raceActive').innerHTML=activeRace?`<div class="runner"><div><strong>Startnr. ${activeRace.raceBib} – ${esc(activeRace.name)}</strong><div>${esc(activeRace.raceName)}</div><div class="muted">Gestartet ${clock(activeRace.start)}</div></div><span class="pill">LÄUFT</span></div>`:'<div class="empty">Noch kein Rennfahrer gestartet.</div>';
+ renderRaceSetup();renderRaceQueue();
+ const recentTraining=[...trainingResults.map(r=>({...r,event:'Zeit',at:r.finish})),...trainingDnf.map(r=>({...r,event:'Nicht im Ziel',at:r.time}))].sort((a,b)=>b.at-a.at).slice(0,8);
+ $('trainingRecent').innerHTML=recentTraining.length?recentTraining.map(r=>`<div class="runner"><div><strong>#${r.bib} – ${esc(nameOf(r.bib))}</strong><div class="muted">${date(r.at)} · ${clock(r.at)}</div></div><strong>${r.event==='Zeit'?fmt(r.ms):'Nicht im Ziel'}</strong></div>`).join(''):'<div class="empty">Noch keine Trainingsereignisse.</div>';
+ let best=[...new Map(trainingResults.map(r=>[r.bib,trainingResults.filter(x=>x.bib===r.bib).sort((a,b)=>a.ms-b.ms)[0]])).values()].sort((a,b)=>a.ms-b.ms);
+ $('rankingList').innerHTML=best.length?`<div class="tablewrap"><table><thead><tr><th>Platz</th><th>Trainingsnr.</th><th>Name</th><th>Bestzeit</th><th>Läufe</th></tr></thead><tbody>${best.map((r,i)=>`<tr><td class="rank">${i+1}</td><td>#${r.bib}</td><td>${esc(nameOf(r.bib))}</td><td><b>${fmt(r.ms)}</b></td><td>${trainingResults.filter(x=>x.bib===r.bib).length}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Noch keine Trainingsergebnisse.</div>';
+ let hb=$('historyDriver').value;$('historyList').innerHTML=hb?historyHtml(+hb):'<div class="empty">Fahrer auswählen, um alle Trainingsläufe zu sehen.</div>';
+ $('raceResultsList').innerHTML=raceResults.length?(()=>{
+ const races=[...new Set(raceResults.map(r=>r.raceName))];
+ return races.map(raceName=>{
+  const rows=raceResults.filter(r=>r.raceName===raceName);
+  const finishers=rows.filter(r=>!r.status).sort((a,b)=>a.ms-b.ms);
+  const dns=rows.filter(r=>r.status==='DNS').sort((a,b)=>(Number(a.raceBib)||0)-(Number(b.raceBib)||0));
+  const dnf=rows.filter(r=>r.status==='DNF').sort((a,b)=>(Number(a.raceBib)||0)-(Number(b.raceBib)||0));
+  const presentClasses=new Set(finishers.map(r=>r.ageClass||'Ohne Altersklasse'));
+  const classes=[...ageClassRules.map(r=>r.name).filter(cls=>presentClasses.has(cls)), ...[...presentClasses].filter(cls=>!ageClassRules.some(r=>r.name===cls))];
+  const rankingTable=(arr)=>arr.length?`<div class="tablewrap"><table><thead><tr><th>Platz</th><th>Rennnr.</th><th>Fahrer</th><th>Altersklasse</th><th>Zeit</th></tr></thead><tbody>${arr.map((r,i)=>`<tr><td class="rank">${i+1}</td><td>${r.raceBib}</td><td>${esc(r.name)}</td><td>${esc(r.ageClass||'Ohne Altersklasse')}</td><td><b>${fmt(r.ms)}</b></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Keine gewerteten Teilnehmer.</div>';
+  const statusTable=(arr)=>arr.length?`<div class="tablewrap"><table><thead><tr><th>Rennnr.</th><th>Fahrer</th></tr></thead><tbody>${arr.map(r=>`<tr><td>${r.raceBib}</td><td>${esc(r.name)}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Keine Teilnehmer in dieser Liste.</div>';
+  return `<div class="card"><strong>${esc(raceName)}</strong><h3>Gesamtwertung – schnellste Zeiten</h3>${rankingTable(finishers)}${classes.map(cls=>`<h3>Altersklasse: ${esc(cls)}</h3>${rankingTable(finishers.filter(r=>(r.ageClass||'Ohne Altersklasse')===cls))}`).join('')}<h3>Nicht im Ziel</h3>${statusTable(dnf)}<h3>Nicht am Start</h3>${statusTable(dns)}</div>`;
+ }).join('');
+})():'<div class="empty">Noch keine Rennergebnisse gespeichert.</div>';
+ $('participantCount').textContent=participants.length+' / 100';
+ $('participantList').innerHTML=participants.length?participants.slice().sort((a,b)=>(a.role==='race'?1:0)-(b.role==='race'?1:0)||a.bib-b.bib).map(p=>`<div class="runner"><div style="flex:1;min-width:0"><strong>${p.role==='race'?'Nur Rennen':'Training'}${p.role==='race'?'':' · Nr. '+trainingNumber(p)}</strong> ${esc(p.name)}<div class="muted">${esc(p.ageClass||'Noch nicht zugeordnet')}</div><label class="muted">Geburtsdatum</label><input class="field" type="date" value="${esc(p.birthDate||'')}" onchange="updateBirth(${p.bib},this.value)" style="padding:8px;margin-top:4px"></div><button class="btn small gray" onclick="removeP(${p.bib})">Entfernen</button></div>`).join(''):'<div class="empty">Noch keine Teilnehmer eingetragen.</div>';
+ $('ageClassRules').innerHTML=ageClassRules.length?ageClassRules.map((r,i)=>`<div class="runner"><div style="flex:1"><strong>${i+1}. ${esc(r.name)}</strong><div class="muted">Jahrgänge ${r.from} bis ${r.to}</div></div><div class="row" style="gap:5px"><button class="btn small gray" onclick="moveAgeClass(${i},-1)" ${i===0?'disabled':''} title="Nach oben">↑</button><button class="btn small gray" onclick="moveAgeClass(${i},1)" ${i===ageClassRules.length-1?'disabled':''} title="Nach unten">↓</button><button class="btn small gray" onclick="editAgeClass(${i})">Bearbeiten</button><button class="btn small gray" onclick="removeAgeClass(${i})">Entfernen</button></div></div>`).join(''):'<div class="muted">Noch keine Altersklassen angelegt.</div>';
+}
+function historyHtml(bib){let arr=trainingResults.filter(r=>r.bib===bib).sort((a,b)=>a.finish-b.finish);return arr.length?`<div class="tablewrap"><table><thead><tr><th>Lauf</th><th>Datum</th><th>Startzeit</th><th>Laufzeit</th></tr></thead><tbody>${arr.map((r,i)=>`<tr><td>${i+1}</td><td>${date(r.finish)}</td><td>${clock(r.start)}</td><td><b>${fmt(r.ms)}</b></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Für diesen Fahrer gibt es noch keine Trainingsläufe.</div>'}
+$('autoStartSignal').onclick=()=>simulateAutoEvent('START');
+$('autoFinishSignal').onclick=()=>simulateAutoEvent('FINISH');
+$('autoFinishSignal').disabled=true;
+$('trainingDriver').onchange=()=>{$('trainingBib').textContent=$('trainingDriver').value?'#'+$('trainingDriver').value:'–'};
+$('trainingStart').onclick=()=>{if(activeTraining||activeRace)return alert('Es läuft bereits ein Zeitmesslauf. Bitte zuerst Ziel erfassen.');let bib=+$('trainingDriver').value;if(!bib)return alert('Bitte zuerst einen Trainingsfahrer auswählen.');activeTraining={bib,start:Date.now()};render()};
+$('trainingFinish').onclick=()=>{if(!activeTraining)return alert('Kein Trainingsfahrer unterwegs.');let finish=Date.now();trainingResults.unshift({...activeTraining,finish,ms:finish-activeTraining.start});activeTraining=null;save();render()};
+$('trainingDnf').onclick=()=>{if(!activeTraining)return alert('Kein Trainingsfahrer unterwegs.');if(!confirm(`${nameOf(activeTraining.bib)} als „Nicht im Ziel“ markieren? Es wird keine Trainingszeit gespeichert.`))return;trainingDnf.unshift({bib:activeTraining.bib,start:activeTraining.start,time:Date.now()});trainingDnf=trainingDnf.slice(0,200);activeTraining=null;save();render()};
+$('racePrepare').onclick=prepareRaceQueue;
+$('raceRandomize').onclick=randomizeRaceNumbers;
+$('raceReset').onclick=resetRaceQueue;
+$('raceStart').onclick=()=>{if(activeTraining||activeRace)return alert('Es läuft bereits ein Zeitmesslauf. Bitte zuerst Ziel erfassen.');if(!racePrepared)return alert('Bitte zuerst die Rennstartliste übernehmen.');let item=raceQueue[raceQueueIndex];if(!item)return alert('Alle Startnummern wurden abgearbeitet.');let raceName=$('raceName').value.trim();if(!raceName)return alert('Bitte einen Rennnamen eingeben.');activeRace={bib:item.bib,name:item.name,raceBib:item.raceBib,raceName,ageClass:item.ageClass,start:Date.now()};raceAddLog(`START – Startnr. ${item.raceBib}: ${item.name}`);render()};
+$('raceFinish').onclick=()=>{if(!activeRace)return alert('Kein Rennfahrer unterwegs.');let finish=Date.now();raceResults.unshift({...activeRace,finish,ms:finish-activeRace.start});raceAddLog(`ZIEL – Startnr. ${activeRace.raceBib}: ${fmt(finish-activeRace.start)} gespeichert`);activeRace=null;raceQueueIndex++;save();render()};
+$('raceSkip').onclick=()=>{if(activeRace)return alert('Ein Fahrer ist bereits gestartet. Verwende dann „Nicht im Ziel“.');if(!racePrepared)return alert('Bitte zuerst die Rennstartliste übernehmen.');let item=raceQueue[raceQueueIndex];if(!item)return alert('Es gibt keine weitere Startnummer.');if(!confirm(`Startnr. ${item.raceBib} (${item.name}) als „Nicht am Start“ markieren?`))return;raceResults.unshift({raceName,raceBib:item.raceBib,name:item.name,ageClass:item.ageClass,status:'DNS'});raceAddLog(`NICHT AM START – Startnr. ${item.raceBib}: ${item.name}`);raceQueueIndex++;save();render()};
+$('raceDnf').onclick=()=>{if(!activeRace)return alert('Kein Rennfahrer unterwegs. Für einen Fahrer ohne Start bitte „Nicht am Start“ verwenden.');if(!confirm(`Startnr. ${activeRace.raceBib} (${activeRace.name}) als „Nicht im Ziel“ markieren? Es wird keine Zeit gespeichert.`))return;raceResults.unshift({...activeRace,status:'DNF',start:undefined});raceAddLog(`NICHT IM ZIEL – Startnr. ${activeRace.raceBib}: ${activeRace.name}`);activeRace=null;raceQueueIndex++;save();render()};
+
+function renderRaceSetup(){
+ const host=$('raceRoster');if(!host)return;
+ if(!participants.length){host.innerHTML='<div class="empty">Bitte zuerst Teilnehmer in der Teilnehmerliste anlegen.</div>';return;}
+ host.innerHTML='<div class="row between" style="margin-bottom:8px"><strong>Teilnehmer für dieses Rennen</strong><span class="pill">'+raceRoster.length+' ausgewählt</span></div><div class="muted" style="margin-bottom:8px">Trainingsteilnehmer und reine Rennteilnehmer stehen gemeinsam zur Auswahl.</div><div class="tablewrap"><table><thead><tr><th>Dabei</th><th>Trainingsnr.</th><th>Teilnehmer</th><th>Altersklasse</th><th>Rennstartnr.</th></tr></thead><tbody>'+ 
+ participants.slice().sort((a,b)=>a.bib-b.bib).map(p=>{
+  const saved=raceRoster.find(x=>x.bib===p.bib); const selected=!!saved; const tn=trainingNumber(p);
+  return `<tr><td><input type="checkbox" class="race-present" data-bib="${p.bib}" ${selected?'checked':''} aria-label="${esc(p.name)} nimmt teil"></td><td>${tn==null?'–':'#'+tn}</td><td>${esc(p.name)}${p.role==='race'?' <span class="pill">Nur Rennen</span>':''}</td><td>${esc(p.ageClass||'Nicht zugeordnet')}</td><td><input class="field race-seed" data-bib="${p.bib}" type="number" min="1" placeholder="Startnr." value="${saved?.raceBib??''}" ${selected?'':'disabled'} style="min-width:95px;padding:8px"></td></tr>`;
+ }).join('')+'</tbody></table></div>';
+ host.querySelectorAll('.race-present').forEach(chk=>chk.addEventListener('change',()=>{
+  const bib=+chk.dataset.bib; const existing=raceRoster.find(x=>x.bib===bib);
+  if(chk.checked){if(!existing)raceRoster.push({bib,raceBib:null});}
+  else raceRoster=raceRoster.filter(x=>x.bib!==bib);
+  save();renderRaceSetup();
+ }));
+ host.querySelectorAll('.race-seed').forEach(inp=>inp.addEventListener('change',()=>{
+  const bib=+inp.dataset.bib;let item=raceRoster.find(x=>x.bib===bib);
+  if(!item){item={bib,raceBib:null};raceRoster.push(item);}
+  item.raceBib=inp.value?+inp.value:null;save();
+ }));
+}
+
+function randomizeRaceNumbers(){
+ if(activeRace)return alert('Während ein Fahrer unterwegs ist, kann die Startliste nicht geändert werden.');
+ const groups={};
+ const selected=raceRoster.map(x=>participants.find(p=>p.bib===x.bib)).filter(Boolean);
+ selected.forEach(p=>{
+  const cls=(p.ageClass||'').trim();
+  if(!cls)return;
+  (groups[cls]??=[]).push(p);
+ });
+ const missing=selected.filter(p=>!(p.ageClass||'').trim());
+ if(missing.length)return alert('Bei folgenden Teilnehmern fehlt die Altersklasse: '+missing.map(p=>p.name).join(', '));
+ if(!selected.length)return alert('Bitte zuerst die anwesenden Teilnehmer auswählen.');
+ let next=1;const assignments=[];
+ ageClassRules.map(r=>r.name).filter(cls=>groups[cls]).forEach(cls=>{
+  const shuffled=groups[cls].slice();
+  for(let i=shuffled.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]];}
+  shuffled.forEach(p=>assignments.push({bib:p.bib,raceBib:next++}));
+ });
+ raceRoster=assignments;save();render();
+ alert('Die Rennstartnummern wurden nur für die ausgewählten Teilnehmer innerhalb jeder Altersklasse zufällig vergeben.');
+}
+function prepareRaceQueue(){
+ if(activeRace)return alert('Ein Fahrer ist gerade unterwegs. Bitte zuerst den Lauf beenden.');
+ const name=$('raceName').value.trim();if(!name)return alert('Bitte zuerst einen Rennnamen eingeben.');
+ const selected=raceRoster.slice();
+ const values=[...document.querySelectorAll('.race-seed:not(:disabled)')];
+ values.forEach(el=>{const item=selected.find(x=>x.bib===+el.dataset.bib);if(item)item.raceBib=el.value?+el.value:null;});
+ const rows=selected;
+ const nums=rows.map(x=>x.raceBib);
+ if(!rows.length)return alert('Bitte zuerst die anwesenden Teilnehmer auswählen.');
+ if(rows.some(x=>!Number.isInteger(x.raceBib)||x.raceBib<1))return alert('Bitte für alle ausgewählten Teilnehmer eine gültige Rennstartnummer eintragen oder zuerst zufällig vergeben.');
+ if(new Set(nums).size!==nums.length)return alert('Jede Rennstartnummer darf nur einmal vergeben werden.');
+ raceRoster=rows;raceQueue=rows.map(x=>({bib:x.bib,raceBib:x.raceBib,name:nameOf(x.bib),ageClass:participants.find(p=>p.bib===x.bib)?.ageClass||'Ohne Altersklasse'})).sort((a,b)=>a.raceBib-b.raceBib);
+ raceQueueIndex=0;racePrepared=true;raceLog=[];save();render();
+}
+function resetRaceQueue(){
+ if(activeRace)return alert('Ein Fahrer ist gerade unterwegs. Bitte zuerst den Lauf beenden.');
+ if(!confirm('Rennstartliste und aktuellen Rennablauf zurücksetzen? Bereits gespeicherte Rennergebnisse bleiben erhalten.'))return;
+ raceQueue=[];raceQueueIndex=0;racePrepared=false;raceLog=[];raceRoster=[];save();render();
+}
+function raceAddLog(message){raceLog.unshift({message,time:Date.now()});raceLog=raceLog.slice(0,15);}
+function renderRaceQueue(){
+ if(!$('raceNextBib'))return;
+ const item=raceQueue[raceQueueIndex];
+ $('raceQueueState').textContent=!racePrepared?'Startliste nicht übernommen':item?`Teilnehmer ${raceQueueIndex+1} von ${raceQueue.length}`:'Alle Teilnehmer abgearbeitet';
+ $('raceNextBib').textContent=item?`Startnummer ${item.raceBib}`:'–';
+ $('raceNextName').textContent=item?item.name:(racePrepared?'Rennen abgeschlossen':'Noch keine Startliste vorbereitet');
+ $('raceQueueInfo').textContent=item?`${trainingNumber(person(item.bib))==null?'Rennteilnehmer ohne Trainingsnummer':'Trainingsnummer #'+trainingNumber(person(item.bib))} · Nächster Start nach dem vorherigen Zieleinlauf`:'';
+ $('raceStart').disabled=!item||!racePrepared||!!activeRace;
+ $('raceFinish').disabled=!activeRace;
+ $('raceDnf').disabled=!activeRace;
+ $('trainingDnf').disabled=!activeTraining;
+ $('raceSkip').disabled=!item||!racePrepared||!!activeRace;
+ $('raceLog').innerHTML=raceLog.length?raceLog.map(x=>`<div class="runner"><span>${esc(x.message)}</span><span class="muted">${clock(x.time)}</span></div>`).join(''):'<div class="empty">Noch keine Ereignisse.</div>';
+}
+
+$('newType').onchange=()=>{$('newBib').disabled=$('newType').value==='race';$('newBib').placeholder=$('newType').value==='race'?'Keine Trainingsnummer nötig':'Feste Trainingsnr.'};
+$('addParticipant').onclick=()=>{const type=$('newType').value;let bib=+$('newBib').value,name=$('newName').value.trim(),birthDate=$('newBirth').value;if(!name)return alert('Bitte einen Namen eingeben.');if(type==='training'&&!bib)return alert('Bitte eine feste Trainingsnummer eingeben.');if(type==='training'&&participants.some(p=>p.role!=='race'&&trainingNumber(p)===bib))return alert('Diese Trainingsnummer gibt es bereits.');if(participants.length>=100)return alert('Maximal 100 Teilnehmer.');if(type==='race'){bib=Math.min(0,...participants.map(p=>p.bib))-1;}participants.push({bib,role:type,trainingBib:type==='training'?bib:null,name,birthDate,ageClass:classForBirthYear(birthDate?+birthDate.slice(0,4):null)});$('newBib').value='';$('newName').value='';$('newBirth').value='';$('newType').value='training';$('newBib').disabled=false;$('newBib').placeholder='Feste Trainingsnr.';save();render()};
+function classForBirthYear(year){if(!year)return '';const rule=ageClassRules.find(r=>year>=r.from&&year<=r.to);return rule?rule.name:''}
+window.updateBirth=(bib,value)=>{const p=participants.find(x=>x.bib===bib);if(!p)return;p.birthDate=value;p.ageClass=classForBirthYear(value?+value.slice(0,4):null);save();render()};
+window.removeAgeClass=i=>{if(!confirm('Diese Altersklasse wirklich entfernen?'))return;ageClassRules.splice(i,1);save();render()};
+$('addAgeClass').onclick=()=>{const name=$('className').value.trim(),from=+$('classFrom').value,to=+$('classTo').value;if(!name||!from||!to||from>to)return alert('Bitte Bezeichnung sowie gültigen Jahrgang von/bis eingeben.');if(ageClassRules.some(r=>from<=r.to&&to>=r.from))return alert('Dieser Jahrgangsbereich überschneidet sich mit einer bestehenden Altersklasse.');ageClassRules.push({name,from,to});$('className').value='';$('classFrom').value='';$('classTo').value='';save();render()};
+
+window.editAgeClass=i=>{
+ const old=ageClassRules[i];if(!old)return;
+ const name=prompt('Bezeichnung der Altersklasse:',old.name);if(name===null)return;
+ const fromText=prompt('Jahrgang von:',String(old.from));if(fromText===null)return;
+ const toText=prompt('Jahrgang bis (einschließlich):',String(old.to));if(toText===null)return;
+ const from=Number(fromText),to=Number(toText),newName=name.trim();
+ if(!newName||!Number.isInteger(from)||!Number.isInteger(to)||from<1900||to>2100||from>to)return alert('Bitte gültige Angaben eingeben.');
+ if(ageClassRules.some((r,j)=>j!==i&&from<=r.to&&to>=r.from))return alert('Dieser Jahrgangsbereich überschneidet sich mit einer anderen Altersklasse.');
+ ageClassRules[i]={name:newName,from,to};
+ participants.forEach(p=>{const y=p.birthDate?+p.birthDate.slice(0,4):null;p.ageClass=classForBirthYear(y)});
+ raceResults.forEach(r=>{const p=participants.find(x=>x.bib===r.bib);if(p)r.ageClass=p.ageClass||'Ohne Altersklasse'});
+ raceRoster.forEach(r=>{const p=participants.find(x=>x.bib===r.bib);if(p)r.ageClass=p.ageClass||''});
+ save();render();alert('Altersklasse geändert und Teilnehmer neu zugeordnet.');
+};
+window.moveAgeClass=(i,dir)=>{const j=i+dir;if(j<0||j>=ageClassRules.length)return;[ageClassRules[i],ageClassRules[j]]=[ageClassRules[j],ageClassRules[i]];save();render()};
+$('assignAgeClasses').onclick=()=>{if(!ageClassRules.length)return alert('Bitte zuerst Altersklassen mit Jahrgangsbereichen festlegen.');let missing=[];participants.forEach(p=>{const y=p.birthDate?+p.birthDate.slice(0,4):null;p.ageClass=classForBirthYear(y);if(!y||!p.ageClass)missing.push(p.name+(y?' (Jahrgang '+y+')':' (Geburtsdatum fehlt)'));});raceResults.forEach(r=>{const p=participants.find(x=>x.bib===r.bib);if(p)r.ageClass=p.ageClass||'Ohne Altersklasse'});raceRoster.forEach(r=>{const p=participants.find(x=>x.bib===r.bib);if(p)r.ageClass=p.ageClass||''});save();render();alert('Zuordnung abgeschlossen.'+(missing.length?' Folgende Teilnehmer benötigen noch ein Geburtsdatum oder passende Altersklasse: '+missing.join(', '):' Alle Teilnehmer wurden zugeordnet.'))};
+window.removeP=b=>{if(activeTraining?.bib===b||activeRace?.bib===b)return alert('Dieser Fahrer ist gerade unterwegs.');if(!confirm('Teilnehmer entfernen? Bereits gespeicherte Zeiten bleiben erhalten.'))return;participants=participants.filter(p=>p.bib!==b);save();render()};
+$('historyDriver').onchange=()=>{$('historyList').innerHTML=$('historyDriver').value?historyHtml(+$('historyDriver').value):'<div class="empty">Fahrer auswählen, um alle Trainingsläufe zu sehen.</div>'};
+function exportCsv(filename,rows){let csv='\ufeff'+rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\r\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+$('trainingExport').onclick=()=>exportCsv('ski-trainingsergebnisse.csv',[['Trainingsnummer','Name','Datum','Zeit'],...trainingResults.map(r=>[r.bib,nameOf(r.bib),date(r.finish),fmt(r.ms)])]);
+$('raceExport').onclick=()=>exportCsv('ski-rennergebnisse.csv',[['Rennen','Datum','Rennstartnummer','Fahrer','Trainingsnummer','Altersklasse','Zeit'],...raceResults.map(r=>[r.raceName,date(r.finish),r.raceBib,r.name,r.bib,r.ageClass||'',fmt(r.ms)])]);
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===b.dataset.tab))});
+save();
+render();
+</script></body></html>
