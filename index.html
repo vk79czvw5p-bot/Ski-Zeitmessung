@@ -1,101 +1,63 @@
 <!doctype html>
-<html lang="de">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Ski-Zeitmessung">
-<title>🏁 Ski-Zeitmessung</title>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#10243a"><title>Ski-Trainingszeitmessung</title>
 <style>
-*{box-sizing:border-box} body{margin:0;background:#eef2f5;color:#17212b;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-header{background:#123b5d;color:#fff;padding:20px 16px calc(18px + env(safe-area-inset-top));text-align:center}
-h1{margin:0;font-size:24px} main{max-width:650px;margin:auto;padding:14px}
-.card{background:#fff;border-radius:18px;padding:18px;margin-bottom:14px;box-shadow:0 3px 14px #0001}
-.label{font-size:12px;color:#66727e;text-transform:uppercase;letter-spacing:.08em}
-.nr{font-size:28px;font-weight:800;text-align:center;margin:8px 0 16px}
-input{width:100%;font-size:22px;text-align:center;padding:12px;border:1px solid #cbd4db;border-radius:12px}
-.big{font-size:58px;font-weight:900;text-align:center;font-variant-numeric:tabular-nums;margin:8px 0 18px}
-button{border:0;border-radius:14px;padding:17px 12px;font-size:19px;font-weight:800;color:#fff;background:#123b5d}
-button:disabled{opacity:.35} .start{background:#1f7a45}.finish{background:#a52d2d}.secondary{background:#64727d}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.wide{width:100%;margin-top:10px}
-.row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #edf0f2;font-variant-numeric:tabular-nums}
-.row:last-child{border-bottom:0}.state{text-align:center;font-weight:800;padding:8px}
-table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:9px 5px;text-align:left;border-bottom:1px solid #edf0f2}th{font-size:11px;color:#66727e}
-.note{font-size:13px;color:#66727e;line-height:1.45}
-</style>
-</head>
-<body>
-<header><h1>🏁 Ski-Zeitmessung</h1></header>
-<main>
-<section class="card">
-<div class="label">Startnummer</div>
-<input id="nr" type="number" min="1" max="999" value="1" inputmode="numeric">
-<div class="label" style="margin-top:18px">Laufzeit</div>
-<div id="time" class="big">00:00.00</div>
-<div id="state" class="state">BEREIT</div>
-<div class="row"><span>Start</span><strong id="start">--:--:--.--</strong></div>
-<div class="row"><span>Ziel</span><strong id="finish">--:--:--.--</strong></div>
-</section>
-
-<section class="card">
-<div class="actions">
-<button id="startBtn" class="start" onclick="startRun()">▶ START</button>
-<button id="finishBtn" class="finish" onclick="finishRun()" disabled>■ ZIEL</button>
+:root{--navy:#10243a;--blue:#1769aa;--green:#16834a;--red:#c7473b;--bg:#f2f5f8;--line:#dce3ea;--muted:#647487}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font:16px system-ui,-apple-system,Segoe UI,sans-serif;color:#15283b}header{background:var(--navy);color:white;padding:18px 16px 14px;position:sticky;top:0;z-index:3}.top{display:flex;justify-content:space-between;align-items:center;gap:10px}h1{font-size:20px;margin:0;font-weight:800}.status{font-size:12px;border:1px solid #52708b;border-radius:20px;padding:6px 10px;color:#c9f3d8}.wrap{max-width:900px;margin:auto;padding:14px 14px 90px}.tabs{display:flex;gap:8px;margin:14px 0;overflow:auto}.tab{border:1px solid var(--line);background:white;border-radius:12px;padding:10px 14px;font-weight:700;white-space:nowrap;color:#34495e}.tab.active{background:var(--blue);color:white;border-color:var(--blue)}.panel{display:none}.panel.active{display:block}.card{background:white;border:1px solid var(--line);border-radius:16px;padding:15px;margin-bottom:13px;box-shadow:0 2px 8px #142b4010}.muted{color:var(--muted);font-size:13px}.row{display:flex;gap:10px;align-items:center}.between{justify-content:space-between}.field{width:100%;padding:12px;border:1px solid #cbd5df;border-radius:10px;font:inherit;background:white}.btn{border:0;border-radius:12px;padding:14px 16px;color:white;font-weight:800;font-size:16px;background:var(--blue);width:100%;cursor:pointer}.btn.green{background:var(--green)}.btn.red{background:var(--red)}.btn.gray{background:#e8edf2;color:#26394c}.btn.small{width:auto;padding:9px 12px;font-size:13px}.bigtime{text-align:center;font-size:clamp(36px,10vw,58px);font-weight:850;letter-spacing:1px;font-variant-numeric:tabular-nums;margin:5px 0}.metric{font-size:28px;font-weight:850}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:10px 8px;border-bottom:1px solid #e8edf2;white-space:nowrap}th{color:var(--muted);font-size:12px;text-transform:uppercase}.pill{font-size:11px;padding:4px 8px;border-radius:20px;background:#eaf1f8;color:#31516e}.empty{text-align:center;color:var(--muted);padding:22px}.notice{background:#fff7e7;border:1px solid #f1d59b;padding:12px;border-radius:12px;font-size:13px;line-height:1.45}.runner{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid #edf0f3}.runner:last-child{border:0}.hidden{display:none!important}
+</style></head><body>
+<header><div class="top"><h1>🏁 SKI-TRAININGSZEITMESSUNG</h1><span class="status" id="status">● Testbetrieb</span></div><div class="muted" style="color:#b8c7d5;margin-top:5px">Ein Fahrer auf der Strecke · alle Läufe dauerhaft speichern</div></header>
+<div class="wrap">
+<nav class="tabs"><button class="tab active" data-tab="messung">Zeitmessung</button><button class="tab" data-tab="historie">Laufhistorie</button><button class="tab" data-tab="fahrer">Fahrer</button></nav>
+<section class="panel active" id="messung">
+<div class="card">
+ <div class="muted">TRAININGSTAG</div><input class="field" id="trainingDate" type="date" style="margin-top:6px">
+ <div class="muted" style="margin-top:14px">FAHRER AUSWÄHLEN</div><select class="field" id="driverSelect" style="margin-top:6px"><option value="">Bitte zuerst Fahrer anlegen</option></select>
+ <div class="grid" style="margin-top:12px"><div><div class="muted">BISHERIGE LÄUFE</div><div class="metric" id="runCount">0</div></div><div><div class="muted">PERSÖNLICHE BESTZEIT</div><div class="metric" id="bestTime">–</div></div></div>
+ <div id="timer" class="bigtime">00:00.00</div><div class="muted" id="timerHint" style="text-align:center">Bereit für den Start</div>
+ <div class="grid" style="margin-top:14px"><button class="btn green" id="startBtn">▶ START</button><button class="btn red" id="finishBtn" disabled>ZIEL</button></div>
 </div>
-<button class="secondary wide" onclick="newRun()">Neuer Lauf</button>
+<div class="card"><div class="row between"><strong>Letzte Läufe dieses Fahrers</strong><span class="pill" id="lastCount">0 Läufe</span></div><div id="recentRuns" class="empty">Noch keine Läufe für diesen Fahrer.</div></div>
+<div class="notice"><b>Hinweis:</b> Aktuell ist die Zeitmessung im Testbetrieb per Knopfdruck. Später lösen Startbügel und Ziell Lichtschranke die Messung über die ESP32-Geräte aus. Es kann immer nur ein Fahrer gleichzeitig gestartet werden.</div>
 </section>
-
-<section class="card">
-<div class="label">Letzte Ergebnisse</div>
-<div style="overflow:auto">
-<table><thead><tr><th>Nr.</th><th>Start</th><th>Ziel</th><th>Zeit</th></tr></thead>
-<tbody id="results"></tbody></table>
+<section class="panel" id="historie">
+<div class="card"><div class="row between"><strong>Alle Trainingsläufe</strong><button class="btn small gray" id="exportBtn">Excel-CSV exportieren</button></div>
+<div class="grid" style="margin-top:10px"><select class="field" id="filterDriver"><option value="">Alle Fahrer</option></select><input class="field" id="filterDate" type="date" aria-label="Nach Datum filtern"></div>
+<div id="allRuns" class="empty">Noch keine Läufe gespeichert.</div></div>
+</section>
+<section class="panel" id="fahrer">
+<div class="card"><strong>Fahrer hinzufügen</strong><div class="grid" style="margin-top:10px"><input class="field" id="newBib" type="number" min="1" placeholder="Startnummer"><input class="field" id="newName" placeholder="Name"></div><button class="btn" style="margin-top:10px" id="addDriver">+ Fahrer speichern</button></div>
+<div class="card"><div class="row between"><strong>Fahrerverzeichnis</strong><span class="pill" id="driverCount">0 Fahrer</span></div><div id="driverList" class="empty">Noch keine Fahrer eingetragen.</div></div></section>
 </div>
-<button class="wide" onclick="exportCSV()">CSV für Excel exportieren</button>
-<button class="secondary wide" onclick="clearResults()">Ergebnisse löschen</button>
-</section>
-
-<section class="card">
-<div class="label">iPhone-Hinweis</div>
-<p class="note">Diese Version ist ein Test der Bedienung. Später kommen START automatisch vom Startgerät und ZIEL automatisch von der Lichtschranke. Die Ergebnisse bleiben dann auf dem Zielgerät gespeichert.</p>
-</section>
-</main>
 <script>
-let results=JSON.parse(localStorage.getItem("ski_results")||"[]");
-let current={nr:1,start:null,finish:null}; let timer=null;
-
-function timeString(d){return d.toLocaleTimeString("de-DE",{hour12:false})+"."+String(d.getMilliseconds()).padStart(3,"0").slice(0,2)}
-function duration(ms){let cs=Math.floor(ms/10),s=Math.floor(cs/100),m=Math.floor(s/60);cs%=100;s%=60;return String(m).padStart(2,"0")+":"+String(s).padStart(2,"0")+"."+String(cs).padStart(2,"0")}
+const $=id=>document.getElementById(id);
+const read=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}};
+let drivers=read('skiTrainingDrivers',[]),runs=read('skiTrainingRuns',[]),startedAt=null,clock=null;
+const today=()=>{let d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+$('trainingDate').value=today();
+const save=()=>{localStorage.setItem('skiTrainingDrivers',JSON.stringify(drivers));localStorage.setItem('skiTrainingRuns',JSON.stringify(runs))};
+const fmt=ms=>{let s=Math.floor(ms/1000),h=Math.floor(ms%1000/10);return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}.${String(h).padStart(2,'0')}`};
+const driver=b=>drivers.find(x=>x.bib===Number(b));
+const driverRuns=b=>runs.filter(r=>r.bib===Number(b));
+const best=b=>{let a=driverRuns(b);return a.length?Math.min(...a.map(r=>r.ms)):null};
 function render(){
- document.getElementById("start").textContent=current.start?timeString(current.start):"--:--:--.--";
- document.getElementById("finish").textContent=current.finish?timeString(current.finish):"--:--:--.--";
- document.getElementById("time").textContent=current.start?(current.finish?duration(current.finish-current.start):duration(Date.now()-current.start.getTime())):"00:00.00";
- document.getElementById("startBtn").disabled=!!current.start;
- document.getElementById("finishBtn").disabled=!current.start||!!current.finish;
- document.getElementById("state").textContent=current.finish?"ZIEL ERFASST":current.start?"LÄUFT …":"BEREIT";
- document.getElementById("results").innerHTML=results.slice().reverse().map(x=>`<tr><td>${x.nr}</td><td>${x.start}</td><td>${x.finish}</td><td><strong>${x.time}</strong></td></tr>`).join("");
+ const sel=$('driverSelect'),old=sel.value;sel.innerHTML='<option value="">Fahrer auswählen …</option>'+drivers.slice().sort((a,b)=>a.bib-b.bib).map(d=>`<option value="${d.bib}">#${d.bib} – ${esc(d.name)}</option>`).join('');if(drivers.some(d=>String(d.bib)===old))sel.value=old;
+ const b=sel.value,dr=b?driver(b):null,rr=b?driverRuns(b).sort((a,c)=>c.created-c.created):[];
+ $('runCount').textContent=b?rr.length:0;$('bestTime').textContent=b&&best(b)!==null?fmt(best(b)):'–';
+ $('lastCount').textContent=rr.length+' Läufe';
+ $('recentRuns').innerHTML=rr.length?table(rr.slice(0,8),false,b):'<div class="empty">Noch keine Läufe für diesen Fahrer.</div>';
+ $('driverCount').textContent=drivers.length+' Fahrer';$('driverList').innerHTML=drivers.length?drivers.slice().sort((a,b)=>a.bib-b.bib).map(d=>`<div class="runner"><div><b>#${d.bib}</b> ${esc(d.name)} <span class="muted">· ${driverRuns(d.bib).length} Läufe</span></div><button class="btn small gray" onclick="deleteDriver(${d.bib})">Entfernen</button></div>`).join(''):'<div class="empty">Noch keine Fahrer eingetragen.</div>';
+ const f=$('filterDriver'),fv=f.value;f.innerHTML='<option value="">Alle Fahrer</option>'+drivers.slice().sort((a,b)=>a.bib-b.bib).map(d=>`<option value="${d.bib}">#${d.bib} – ${esc(d.name)}</option>`).join('');f.value=fv;
+ renderAll();
 }
-function startRun(){
- current.nr=Number(document.getElementById("nr").value)||1; current.start=new Date(); current.finish=null;
- clearInterval(timer); timer=setInterval(render,50); render();
-}
-function finishRun(){
- if(!current.start)return; current.finish=new Date(); clearInterval(timer);
- results.push({nr:current.nr,start:timeString(current.start),finish:timeString(current.finish),time:duration(current.finish-current.start)});
- localStorage.setItem("ski_results",JSON.stringify(results)); render();
-}
-function newRun(){
- clearInterval(timer); current={nr:(Number(document.getElementById("nr").value)||current.nr||1)+1,start:null,finish:null};
- document.getElementById("nr").value=current.nr; render();
-}
-function clearResults(){if(confirm("Alle gespeicherten Ergebnisse löschen?")){results=[];localStorage.removeItem("ski_results");render()}}
-function exportCSV(){
- let rows=[["Start-Nr.","Startzeit","Zielzeit","Laufzeit"],...results.map(x=>[x.nr,x.start,x.finish,x.time])];
- let csv="\ufeff"+rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(";")).join("\r\n");
- let a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download="Ski_Ergebnisse.csv";a.click();
-}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function table(arr,showDate=true,bib=null){return `<div class="tablewrap"><table><thead><tr>${showDate?'<th>Datum</th>':''}<th>Lauf</th><th>Zeit</th><th>Bestzeit</th><th>Abstand</th></tr></thead><tbody>${arr.map(r=>{let all=driverRuns(r.bib),n=all.filter(x=>x.created<=r.created).length,bt=Math.min(...all.map(x=>x.ms));return `<tr>${showDate?`<td>${r.date}</td>`:''}<td>${n}</td><td><b>${fmt(r.ms)}</b></td><td>${fmt(bt)}</td><td>${r.ms===bt?'Bestzeit':'+'+fmt(r.ms-bt)}</td></tr>`}).join('')}</tbody></table></div>`}
+function renderAll(){let a=runs.slice().sort((x,y)=>y.created-x.created),b=$('filterDriver').value,dt=$('filterDate').value;if(b)a=a.filter(r=>r.bib===Number(b));if(dt)a=a.filter(r=>r.date===dt);$('allRuns').innerHTML=a.length?`<div class="tablewrap"><table><thead><tr><th>Datum</th><th>Fahrer</th><th>Lauf</th><th>Zeit</th><th>Bestzeit</th></tr></thead><tbody>${a.map(r=>{let history=runs.filter(x=>x.bib===r.bib&&x.created<=r.created),n=history.length,bt=Math.min(...history.map(x=>x.ms));return `<tr><td>${r.date}</td><td>#${r.bib} ${esc(driver(r.bib)?.name||r.name||'')}</td><td>${n}</td><td><b>${fmt(r.ms)}</b></td><td>${fmt(bt)}</td></tr>`}).join('')}</tbody></table></div>`:'<div class="empty">Keine passenden Läufe gefunden.</div>'}
+$('driverSelect').onchange=render;
+$('startBtn').onclick=()=>{if(!$('driverSelect').value)return alert('Bitte zuerst einen Fahrer auswählen.');if(startedAt)return;startedAt=Date.now();$('startBtn').disabled=true;$('finishBtn').disabled=false;$('timerHint').textContent='Zeit läuft …';clock=setInterval(()=>$('timer').textContent=fmt(Date.now()-startedAt),50)};
+$('finishBtn').onclick=()=>{if(!startedAt)return;let finish=Date.now(),b=Number($('driverSelect').value),d=driver(b);runs.push({bib:b,name:d?.name||'',date:$('trainingDate').value||today(),start:startedAt,finish,created:finish,ms:finish-startedAt});clearInterval(clock);startedAt=null;$('timer').textContent=fmt(runs[runs.length-1].ms);$('timerHint').textContent='Lauf gespeichert';$('startBtn').disabled=false;$('finishBtn').disabled=true;save();render()};
+$('addDriver').onclick=()=>{let bib=Number($('newBib').value),name=$('newName').value.trim();if(!Number.isInteger(bib)||bib<1||!name)return alert('Bitte eine gültige Startnummer und einen Namen eingeben.');if(drivers.some(d=>d.bib===bib))return alert('Diese Startnummer ist bereits vergeben.');drivers.push({bib,name});$('newBib').value='';$('newName').value='';save();render();$('driverSelect').value=String(bib);render()};
+window.deleteDriver=b=>{if(driverRuns(b).length&&!confirm('Zu diesem Fahrer gibt es gespeicherte Läufe. Fahrer wirklich aus der Liste entfernen? Die Läufe bleiben im Export erhalten.'))return;drivers=drivers.filter(d=>d.bib!==b);save();render()};
+$('filterDriver').onchange=renderAll;$('filterDate').onchange=renderAll;
+$('exportBtn').onclick=()=>{let a=runs.slice().sort((x,y)=>x.date.localeCompare(y.date)||x.bib-y.bib||x.created-y.created),counts={};let rows=[['Datum','Startnummer','Fahrer','Laufnummer','Zeit (Sekunden)','Zeit','Bestzeit','Abstand zur Bestzeit']];for(let r of a){let k=r.bib;counts[k]=(counts[k]||0)+1;let hist=a.filter(x=>x.bib===k&&x.created<=r.created),bt=Math.min(...hist.map(x=>x.ms));rows.push([r.date,r.bib,r.name||driver(k)?.name||'',counts[k],(r.ms/1000).toFixed(2).replace('.',','),fmt(r.ms),fmt(bt),r.ms===bt?'Bestzeit':fmt(r.ms-bt)])}let csv='\ufeff'+rows.map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\r\n'),url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),ael=document.createElement('a');ael.href=url;ael.download='ski-trainingslaeufe.csv';ael.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
+document.querySelectorAll('.tab').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===btn));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===btn.dataset.tab))});
 render();
-</script>
-</body>
-</html>
+</script></body></html>
